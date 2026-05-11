@@ -36,7 +36,7 @@ export default function Hero() {
 
       {/* Subtitle */}
       <p className="text-body-lg font-body-lg text-on-surface-variant mb-10 max-w-2xl">
-        Protokol keamanan tingkat militer untuk melindungi privasi data digital
+        Protokol keamanan tingkat tinggi untuk melindungi privasi data digital
         Anda. Cepat, aman, dan tanpa jejak.
       </p>
 

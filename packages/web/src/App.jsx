@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import BottomNav from './components/BottomNav'
 import Footer from './components/Footer'
 import Home from './pages/Home'
 import Encrypt from './pages/Encrypt'
@@ -18,7 +19,7 @@ export default function App() {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-grow flex flex-col items-center pt-32 pb-24 px-margin-mobile md:px-margin-desktop relative z-10 w-full max-w-container-max mx-auto">
+      <main className="flex-grow flex flex-col items-center pt-32 pb-32 md:pb-24 px-margin-mobile md:px-margin-desktop relative z-10 w-full max-w-container-max mx-auto">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/encrypt" element={<Encrypt />} />
@@ -28,6 +29,9 @@ export default function App() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
   )
 }
