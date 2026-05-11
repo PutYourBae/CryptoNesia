@@ -1,8 +1,49 @@
 import { useState, useRef } from 'react'
 import useCrypto from '../hooks/useCrypto'
 import ProcessingOverlay from '../components/ProcessingOverlay'
+import { copyToClipboard } from '../lib/download'
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
+
+/**
+ * Generates a cryptographically secure random password.
+ * Uses crypto.getRandomValues() for true randomness.
+ * 
+ * @param {number} length - Password length (default: 16)
+ * @returns {string} - Generated password
+ */
+function generatePassword(length = 16) {
+  const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+  const lowercase = 'abcdefghjkmnpqrstuvwxyz'
+  const numbers = '23456789'
+  const symbols = '!@#$%&*_+-='
+  const allChars = uppercase + lowercase + numbers + symbols
+
+  // Ensure at least one of each type
+  const randomValues = crypto.getRandomValues(new Uint32Array(length))
+  const required = [
+    uppercase[randomValues[0] % uppercase.length],
+    lowercase[randomValues[1] % lowercase.length],
+    numbers[randomValues[2] % numbers.length],
+    symbols[randomValues[3] % symbols.length],
+  ]
+
+  // Fill the rest randomly
+  const rest = []
+  for (let i = 4; i < length; i++) {
+    rest.push(allChars[randomValues[i] % allChars.length])
+  }
+
+  // Shuffle using Fisher-Yates
+  const combined = [...required, ...rest]
+  const shuffleValues = crypto.getRandomValues(new Uint32Array(combined.length))
+  for (let i = combined.length - 1; i > 0; i--) {
+    const j = shuffleValues[i] % (i + 1)
+    ;[combined[i], combined[j]] = [combined[j], combined[i]]
+  }
+
+  return combined.join('')
+}
 
 export default function Encrypt() {
   const [mode, setMode] = useState('file') // 'file' or 'text'
@@ -12,6 +53,9 @@ export default function Encrypt() {
   const [showPassword, setShowPassword] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [fileSizeError, setFileSizeError] = useState(null)
+  const [showSuggestion, setShowSuggestion] = useState(false)
+  const [suggestedPassword, setSuggestedPassword] = useState('')
+  const [copied, setCopied] = useState(false)
   const fileInputRef = useRef(null)
 
   const {
@@ -219,14 +263,30 @@ export default function Encrypt() {
 
       {/* Password Input */}
       <div className="bg-surface-container/40 backdrop-blur-md border border-outline-variant/50 rounded-lg p-6 mb-6">
-        <label className="text-code-sm font-code-sm text-on-surface-variant uppercase tracking-widest mb-3 block">
-          Password
-        </label>
+        <div className="flex items-center justify-between mb-3">
+          <label className="text-code-sm font-code-sm text-on-surface-variant uppercase tracking-widest">
+            Password
+          </label>
+          <button
+            onClick={() => {
+              const pw = generatePassword(16)
+              setSuggestedPassword(pw)
+              setShowSuggestion(true)
+              setCopied(false)
+            }}
+            disabled={isDisabled}
+            className="flex items-center gap-1.5 text-code-sm font-code-sm text-primary hover:text-primary-fixed-dim transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined text-[16px]">passkey</span>
+            Sarankan Password
+          </button>
+        </div>
+
         <div className="flex gap-2">
           <input
             type={showPassword ? 'text' : 'password'}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { setPassword(e.target.value); setShowSuggestion(false) }}
             placeholder="Minimal 8 karakter"
             className="flex-grow bg-surface-container-lowest border border-outline-variant/50 rounded px-4 py-3 text-body-md font-body-md text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors"
             disabled={isDisabled}
@@ -241,6 +301,62 @@ export default function Encrypt() {
             </span>
           </button>
         </div>
+
+        {/* Password Suggestion Dropdown */}
+        {showSuggestion && suggestedPassword && (
+          <div className="mt-3 bg-surface-container-high border border-primary/30 rounded-lg p-4 shadow-lg animate-in">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+              <span className="text-code-sm font-code-sm text-primary uppercase tracking-widest">Password Kuat Disarankan</span>
+            </div>
+            <div className="bg-surface-container-lowest rounded px-4 py-3 mb-3 font-code-sm text-body-md text-on-surface select-all break-all tracking-wider">
+              {suggestedPassword}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setPassword(suggestedPassword)
+                  setShowPassword(true)
+                  setShowSuggestion(false)
+                  copyToClipboard(suggestedPassword).then(() => {
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 3000)
+                  })
+                }}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-on-primary text-code-sm font-code-sm font-semibold rounded hover:bg-primary-fixed-dim transition-all duration-200 active:scale-[0.98]"
+              >
+                <span className="material-symbols-outlined text-[16px]">check</span>
+                Gunakan Password Ini
+              </button>
+              <button
+                onClick={() => {
+                  const pw = generatePassword(16)
+                  setSuggestedPassword(pw)
+                  setCopied(false)
+                }}
+                className="px-3 py-2 bg-surface-container border border-outline-variant rounded text-on-surface-variant hover:text-primary hover:border-primary/50 transition-colors"
+                aria-label="Generate new password"
+              >
+                <span className="material-symbols-outlined text-[18px]">refresh</span>
+              </button>
+              <button
+                onClick={() => setShowSuggestion(false)}
+                className="px-3 py-2 bg-surface-container border border-outline-variant rounded text-on-surface-variant hover:text-error hover:border-error/50 transition-colors"
+                aria-label="Dismiss suggestion"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Copied Notification */}
+        {copied && !showSuggestion && (
+          <div className="mt-3 flex items-center gap-2 text-code-sm font-code-sm text-secondary">
+            <span className="material-symbols-outlined text-[16px]">check_circle</span>
+            Password disalin ke clipboard — simpan di tempat aman!
+          </div>
+        )}
 
         {/* Strength Meter */}
         {password.length > 0 && (
