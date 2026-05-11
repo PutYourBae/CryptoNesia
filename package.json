@@ -1,0 +1,9 @@
+{
+  "name": "cryptonesia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CryptoNesia - Secure File Encryption Suite",
+  "workspaces": [
+    "packages/*"
+  ]
+}
