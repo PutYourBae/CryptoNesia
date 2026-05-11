@@ -35,6 +35,17 @@
 body {
   @apply bg-background text-on-background min-h-screen font-body-md antialiased;
   overflow-x: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Re-enable text selection only on interactive/copyable elements */
+input,
+textarea,
+.select-all,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* Pulse animation for the secure dot */
