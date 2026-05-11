@@ -309,7 +309,16 @@ export default function Encrypt() {
               <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
               <span className="text-code-sm font-code-sm text-primary uppercase tracking-widest">Password Kuat Disarankan</span>
             </div>
-            <div className="bg-surface-container-lowest rounded px-4 py-3 mb-3 font-code-sm text-body-md text-on-surface select-all break-all tracking-wider">
+            <div
+              className="bg-surface-container-lowest rounded px-4 py-3 mb-3 font-code-sm text-body-md text-on-surface select-all break-all tracking-wider cursor-pointer"
+              onClick={(e) => {
+                const range = document.createRange()
+                range.selectNodeContents(e.currentTarget)
+                const sel = window.getSelection()
+                sel.removeAllRanges()
+                sel.addRange(range)
+              }}
+            >
               {suggestedPassword}
             </div>
             <div className="flex gap-2">
